@@ -1,0 +1,18 @@
+language: c
+
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+
+    - os: linux
+      compiler: clang
+
+    - os: osx
+
+before_script:
+  - mkdir cmake-build-travis
+  - cd cmake-build-travis
+  - cmake -DTUN_OPEN_ENABLE_TEST=yes ..
+
+script: make
