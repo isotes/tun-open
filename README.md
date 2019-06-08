@@ -1,17 +1,10 @@
 # tun-open
-Small library without dependencies to open/create a tun device on Linux and macOS.
+Small library without dependencies to open/create a TUN device on Linux and macOS.
 
-## Portability
-The library supports only tun (vs. tap) interfaces to be compatible with macOS. Nevertheless, there are a couple of differences to consider:
- - Specifying the name of the device is affects only Linux (the name is always automatically chosen on macOS)
- - Opening existing devices is only possible on Linux
-
-On Linux, the library uses the [tun/tap](https://www.kernel.org/doc/Documentation/networking/tuntap.txt) interface provided by the kernel.
-
-On macOS, the library uses the [utun kernel control](https://github.com/apple/darwin-xnu/blob/master/bsd/net/if_utun.h) interface.
 
 ## Use
-The implementation consists of 1 header and 1 source file and can be included directly in other projects. Additionally, the project contains a CMake file to build as a library.
+The implementation consists of 1 header and 1 source file and can be included directly in other projects. Additionally, the project contains a CMake file to build a library.
+
 
 ## API
 There is only one function and a few helper defines. There is no inbuilt support for configuring the created network interface.
@@ -43,6 +36,7 @@ while (1) {
 close(fd);
 ```
 
+
 ## Configuration
 The CMake project provides 2 options that are both disabled by default:
  - `TUN_OPEN_ENABLE_VERBOSE`: enable verbose error output
@@ -53,14 +47,31 @@ With `TUN_OPEN_ENABLE_VERBOSE`, the library will print an error message to stder
 tunOpen:60: 'connect(fd, (const struct sockaddr *) &addr, sizeof(addr))' failed: Operation not permitted
 ```
 
+
+## TUN Device Configuration
+The configuration of the TUN device is not covered by this library. The [test/example executable](test/test-tun-open.c) contained in this project makes use of the `ip` command line utility and can be used as inspiration.
+
+
 ## Example
 The [test executable](test/test-tun-open.c) provides a more complete example for IPv6:
- - it must run as root or, on Linux, the tun device must already have been created with appropriate permissions
+ - it must run as root or, on Linux, the TUN device must already have been created with appropriate permissions
  - it can be called with an address (default: `fddf:face:face::5555`) and/or a device name (provided by the OS by default and ignored on macOS)
  - it opens the device, and assigns the address using the `ip` command
     - the `ip` command is usually installed on Linux systems and is made available for macOS by the [iproute2mac](https://github.com/brona/iproute2mac) project (available on Homebrew)
 - it starts the `ping6` command in the background to ping an address in the virtual network
 - it runs in a loop, shows some information for each packet, and responds to  ICMPv6-Echo-Request message
+
+
+## Portability
+The library supports only TUN (vs. TAP) interfaces to be compatible with macOS. Nevertheless, there are a couple of additional limitations on macOS:
+ - It is only possible to create new devices (in contrast to opening existing ones).
+ - Names must follow the pattern 'utun[NUMBER]' with 0 being already in use on macOS Sierra and newer.
+
+On Linux, the library uses the [TUN/TAP](https://www.kernel.org/doc/Documentation/networking/tuntap.txt) interface provided by the kernel. On macOS, the library uses the [utun kernel control](https://github.com/apple/darwin-xnu/blob/master/bsd/net/if_utun.h) interface.
+
+
+## Java
+I've also created a pure Java library (using JNA) called [tun-io](https://github.com/isotes/tun-io).
 
 
 ## License

@@ -13,6 +13,7 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #if __APPLE__
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/sys_domain.h>
 #include <sys/kern_control.h>
@@ -39,9 +40,24 @@
 #define CHK(var, call) do { var = call; (void) var; } while (0)
 #endif
 
-int tunOpen(const char* nameHint, TunOpenName* tunName) {
+int tunOpen(const char* name, TunOpenName* tunName) {
 #if __APPLE__
-	(void) nameHint;  // unused
+	u_int32_t numdev = 0;  // create new
+	if (name) {
+		// format must be 'utun<N>' with <N> being a unsigned integer, e.g., utun12
+		if (strncmp(name, "utun", 4) != 0 || name[4] == '\0') {
+			errno = EINVAL;
+			return -1;
+		}
+		for (const char* p = name + 4; *p; p++) {
+			if (*p < '0' || *p > '9' || (*p == '0' && numdev == 0)) {
+				errno = EINVAL;
+				return -1;
+			}
+			numdev = 10 * numdev + (*p - '0');
+		}
+		numdev += 1;  // 1 results in utun0, ... (0 lets the OS choose a name)
+	}
 
 	int fd;
 	CHK(fd, socket(AF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL));
@@ -56,7 +72,7 @@ int tunOpen(const char* nameHint, TunOpenName* tunName) {
 			.ss_len = sizeof(addr),
 			.ss_family = AF_SYSTEM,
 			.ss_sysaddr = SYSPROTO_CONTROL,
-			.ss_reserved = {info.ctl_id},
+			.ss_reserved = {info.ctl_id, numdev},
 	};
 	CHK(err, connect(fd, (const struct sockaddr *) &addr, sizeof(addr)));
 
@@ -67,9 +83,9 @@ int tunOpen(const char* nameHint, TunOpenName* tunName) {
 
 	return fd;
 #else /* __APPLE__ */
-	size_t nameHintLen = nameHint ? strlen(nameHint) : 0;
-	if (nameHintLen >= sizeof(tunName->name) || nameHintLen >= IFNAMSIZ) {
-		errno = EINVAL;
+	size_t nameLen = name ? strlen(name) : 0;
+	if (nameLen >= sizeof(tunName->name) || nameLen >= IFNAMSIZ) {
+		errno = ENAMETOOLONG;
 		return -1;
 	}
 	int fd;
@@ -77,7 +93,7 @@ int tunOpen(const char* nameHint, TunOpenName* tunName) {
 	struct ifreq ifr;
 	memset(&ifr, 0, sizeof(ifr));
 	ifr.ifr_flags = IFF_TUN;
-	memcpy(ifr.ifr_name, nameHint, nameHintLen);
+	memcpy(ifr.ifr_name, name, nameLen);
 
 	int err;
 	CHK(err, ioctl(fd, TUNSETIFF, (void *) &ifr));

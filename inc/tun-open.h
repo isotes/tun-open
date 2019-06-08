@@ -14,12 +14,12 @@ typedef struct TunOpenNameS {
 
 /**
  * Open/create the tun device with the specified name as a hint
- * @attention the hint is ignored on macOS
- * @param nameHint hint for the name of the tun device (may be NULL, must be less than 16 characters)
+ * @attention on macOS, the must be NULL or follow the format 'utun<N>' (N being a unsigned integer)
+ * @param name the name of the tun device (may be NULL, must be less than 16 characters)
  * @param[out] tunName the actual name of the tun device (may be NULL)
  * @return return the new file descriptor or -1 if an error occurred (in which case, errno is set appropriately)
  */
-int tunOpen(const char* nameHint, TunOpenName* tunName);
+int tunOpen(const char* name, TunOpenName* tunName);
 
 /// The offset of the packet in the buffer of a read/write call
 #define TUN_OPEN_PACKET_OFFSET 4
