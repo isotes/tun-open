@@ -40,7 +40,7 @@
 #define CHK(var, call) do { var = call; (void) var; } while (0)
 #endif
 
-int tunOpen(const char* name, TunOpenName* tunName) {
+int tunOpen(const char *name, TunOpenName *tunName) {
 #if __APPLE__
 	u_int32_t numdev = 0;  // create new
 	if (name) {
@@ -77,8 +77,8 @@ int tunOpen(const char* name, TunOpenName* tunName) {
 	CHK(err, connect(fd, (const struct sockaddr *) &addr, sizeof(addr)));
 
 	if (tunName) {
-		socklen_t optlen = sizeof(tunName);
-		CHK(err, getsockopt(fd, SYSPROTO_CONTROL, UTUN_OPT_IFNAME, tunName, &optlen));
+		socklen_t optlen = sizeof(tunName->name);
+		CHK(err, getsockopt(fd, SYSPROTO_CONTROL, UTUN_OPT_IFNAME, tunName->name, &optlen));
 	}
 
 	return fd;

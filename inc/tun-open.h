@@ -19,7 +19,7 @@ typedef struct TunOpenNameS {
  * @param[out] tunName the actual name of the tun device (may be NULL)
  * @return return the new file descriptor or -1 if an error occurred (in which case, errno is set appropriately)
  */
-int tunOpen(const char* name, TunOpenName* tunName);
+int tunOpen(const char *name, TunOpenName *tunName);
 
 /// The offset of the packet in the buffer of a read/write call
 #define TUN_OPEN_PACKET_OFFSET 4
